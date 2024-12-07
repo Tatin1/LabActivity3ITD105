@@ -15,8 +15,10 @@ if 'cv_args' not in st.session_state:
     st.session_state.cv_args = {}
 if 'cv' not in st.session_state:
     st.session_state.cv = None
-if 'models' not in st.session_state:
-    st.session_state.models = {}
+if 'classy_models' not in st.session_state:
+    st.session_state.classy_models = {}
+if 'reggy_models' not in st.session_state:
+    st.session_state.reggy_models = {}
 if 'classy_scores' not in st.session_state:
     st.session_state.classy_scores = {}
 if 'reggy_scores' not in st.session_state:
@@ -61,7 +63,7 @@ def main():
                         expander = st.expander(model_name)
                         with expander:
                             pkg.MODEL_PARAMS[model_name]()
-                
+
                 pkg.show_graph()
 
             else:

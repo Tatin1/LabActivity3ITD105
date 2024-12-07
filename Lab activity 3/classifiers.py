@@ -10,6 +10,7 @@ from sklearn.svm import SVC
 from sklearn.model_selection import cross_val_score
 import streamlit as st
 import pandas as pd
+import joblib
 
 
 MODEL_MAPPING = {
@@ -31,7 +32,7 @@ def create_model(model_type, **kwargs):
     
     # Create and store the model in session state
     model = model_class(**kwargs)
-    st.session_state.models[model_type] = model
+    st.session_state.classy_models[model_type] = model
     return model
 
 def score_model(model, model_type, X, Y, cv):
@@ -146,4 +147,18 @@ MODEL_PARAMS = {
 def show_graph():
     st.write("Model Accuracies")
     s = pd.Series(st.session_state.classy_scores)
+    s.rename("Accuracy", inplace=True)
     st.bar_chart(s, horizontal = True)
+    best_model = max(st.session_state.classy_scores, key=st.session_state.classy_scores.get)
+    st.write(f"Best model: {best_model}: {st.session_state.classy_scores[best_model]:.2f}")
+
+    model_saver()
+
+@st.fragment
+def model_saver():
+    selected_model = st.selectbox("Select model to save", list(st.session_state.classy_models.keys()))
+    if st.button("Save Model"):
+        model = st.session_state.classy_models[selected_model]
+        joblib.dump(model, f"{selected_model}.joblib")
+        st.success(f"Model saved as {selected_model}.joblib")
+

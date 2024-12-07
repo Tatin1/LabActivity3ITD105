@@ -12,6 +12,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import make_pipeline
 import streamlit as st
 import pandas as pd
+import joblib
 
 # Define model mappings
 MODEL_MAPPING = {
@@ -28,6 +29,7 @@ MODEL_MAPPING = {
 }
 
 # Function to create model with StandardScaler to scale features
+@st.cache_resource
 def create_model(model_type, **kwargs):
     model_class = MODEL_MAPPING.get(model_type)
     if model_class is None:
@@ -35,7 +37,7 @@ def create_model(model_type, **kwargs):
 
     # Create a pipeline to standardize data and apply the model
     model = make_pipeline(StandardScaler(), model_class(**kwargs))
-    st.session_state.models[model_type] = model
+    st.session_state.reggy_models[model_type] = model
     return model
 
 # Cross-validation and model scoring
@@ -178,12 +180,6 @@ def svr_view():
     )
     score_model(model, "Support Vector Regressor (SVR)", st.session_state.x, st.session_state.y, st.session_state.cv)
 
-# Graph showing model accuracies
-def show_graph():
-    st.write("Model Accuracies")
-    s = pd.Series({k: v[0] for k, v in st.session_state.reggy_scores.items()})
-    st.bar_chart(s, horizontal=True)
-
 # Add views to the MODEL_PARAMS mapping
 MODEL_PARAMS = {
     "Decision Tree Regressor": decision_tree_view,
@@ -197,3 +193,24 @@ MODEL_PARAMS = {
     "Random Forest Regressor": random_forest_regressor_view,
     "Support Vector Regressor (SVR)": svr_view,
 }
+
+# Graph showing model accuracies
+def show_graph():
+    st.write("Model MAE Scores")
+    s = pd.Series({k: v[0] for k, v in st.session_state.reggy_scores.items()})
+    s_std = pd.Series({k: v[1] for k, v in st.session_state.reggy_scores.items()})
+    st.bar_chart(s, horizontal=True)
+    st.write("Model MAE Standard Deviations")
+    st.bar_chart(s_std, horizontal=True)
+
+    best_model = min(st.session_state.reggy_scores, key=st.session_state.reggy_scores.get)
+    st.write(f"Best MAE score:\n**{best_model}**: {st.session_state.reggy_scores[best_model][0]}")
+
+    model_saver()
+
+@st.fragment
+def model_saver():
+    selected_model = st.selectbox("Select a model to save", list(st.session_state.reggy_models.keys()))
+    if st.button("Save Model"):
+        joblib.dump(st.session_state.reggy_models[selected_model], f"{selected_model}.joblib")
+        st.success(f"Model saved as {selected_model}.joblib")
