@@ -29,7 +29,6 @@ MODEL_MAPPING = {
 }
 
 # Function to create model with StandardScaler to scale features
-@st.cache_resource
 def create_model(model_type, **kwargs):
     model_class = MODEL_MAPPING.get(model_type)
     if model_class is None:
@@ -212,5 +211,6 @@ def show_graph():
 def model_saver():
     selected_model = st.selectbox("Select a model to save", list(st.session_state.reggy_models.keys()))
     if st.button("Save Model"):
-        joblib.dump(st.session_state.reggy_models[selected_model], f"{selected_model}.joblib")
+        model = st.session_state.reggy_models[selected_model]
+        joblib.dump(model.fit(st.session_state.x, st.session_state.y), f"{selected_model}.joblib")
         st.success(f"Model saved as {selected_model}.joblib")

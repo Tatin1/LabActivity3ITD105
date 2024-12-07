@@ -159,6 +159,6 @@ def model_saver():
     selected_model = st.selectbox("Select model to save", list(st.session_state.classy_models.keys()))
     if st.button("Save Model"):
         model = st.session_state.classy_models[selected_model]
-        joblib.dump(model, f"{selected_model}.joblib")
+        joblib.dump(model.fit(st.session_state.x, st.session_state.y), f"{selected_model}.joblib")
         st.success(f"Model saved as {selected_model}.joblib")
 
